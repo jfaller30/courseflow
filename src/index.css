@@ -1,0 +1,110 @@
+@import "tailwindcss";
+
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #535bf2;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover {
+  border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
+}
+
+/* explicit override for the min grade text */
+svg foreignObject .node-grade {
+  color: rgb(185 28 28) !important; /* Tailwind red-700 */
+  font-weight: 700;                  /* bold */
+}
+
+@keyframes scrollWheel {
+  0%   { transform: translateY(0); opacity:.9 }
+  50%  { transform: translateY(-8px); opacity:.9 }
+  100% { transform: translateY(0); opacity:.9 }
+}
+
+@keyframes dragHand {
+  0%   { transform: translateX(0); opacity:.9 }
+  50%  { transform: translateX(20px); opacity:.9 }
+  100% { transform: translateX(0); opacity:.9 }
+}
+
+/* ---- PRINT: force single-page, scale-to-width, no toolbar ---- */
+@page { size: landscape; margin: 0.5in; }
+
+@media print {
+  html, body { height: auto !important; min-height: 0 !important; background: #fff; }
+  body { display: block !important; margin: 0 !important; }
+
+  /* kill app-level 100vh/svh sizing */
+  #root, .w-screen, .h-screen { width: 100% !important; height: auto !important; }
+  .min-h-\[100svh\] { min-height: 0 !important; }
+
+  /* hide the top toolbar */
+  /*.p-3.border-b { display: none !important; }*/
+
+  /* let the map fill the page width and avoid breaking */
+  .relative.flex-1 { overflow: visible !important; }
+  svg { width: 100% !important; height: auto !important; overflow: visible !important; }
+
+  /* prevent pagination inside the graphic */
+  #root, svg { break-inside: avoid; page-break-inside: avoid; }
+}
