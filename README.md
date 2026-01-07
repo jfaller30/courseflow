@@ -8,6 +8,14 @@ The system is designed to support both student-facing exploration and advisor-fa
 
 ---
 
+## Citation
+
+If you use or reference CourseFlow in academic work, please cite the accompanying publication:
+
+K. Faller II, “CourseFlow: An Interactive Flowchart System for Understanding Complex Degree Requirements,” Computer Applications in Engineering Education, Wiley, 2026 [Submitted]
+
+---
+
 ## Technology Stack
 
 - **Frontend:** React + Vite  
@@ -198,9 +206,3 @@ src/
 ```
 
 ---
-
-## Citation
-
-If you use or reference CourseFlow in academic work, please cite the accompanying publication:
-
-K. Faller II, “CourseFlow: An Interactive Flowchart System for Understanding Complex Degree Requirements,” Computer Applications in Engineering Education, submitted for publication, 2026.
