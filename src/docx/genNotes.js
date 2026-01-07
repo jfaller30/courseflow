@@ -333,7 +333,8 @@ export async function generateAdvisingDoc({ programId, labels, coursesProp, retu
     CPEI: "BS-MS Computer Engineering",
     EGEE: "Electrical Engineering",
     EGME: "Mechanical Engineering",
-    EGCE: "Civil Engineering"
+    EGCE: "Civil Engineering",
+    CPSC: "Computer Science"
   };
 
   const programTitle =
