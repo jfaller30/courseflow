@@ -3,7 +3,6 @@ import {
   BorderStyle,
   Document,
   ExternalHyperlink,
-  Footer,
   Packer,
   Paragraph,
   Table,
@@ -329,12 +328,16 @@ export async function generateAdvisingDoc({ programId, labels, coursesProp, retu
   const leftRows = isSpring ? bySem.Spr : bySem.Fall;
   const rightRows = isSpring ? bySem.Fall : bySem.Spr;
 
+  const PROGRAM_TITLES = {
+    EGCP: "Computer Engineering",
+    CPEI: "BS-MS Computer Engineering",
+    EGEE: "Electrical Engineering",
+    EGME: "Mechanical Engineering",
+    EGCE: "Civil Engineering"
+  };
+
   const programTitle =
-    programId === "EGCP"
-      ? "Computer Engineering"
-      : programId === "CPEI"
-        ? "BS-MS Computer Engineering"
-          : "Program";
+    PROGRAM_TITLES[programId] ?? `${programId} Program`;
 
   const doc = new Document({
     sections: [
