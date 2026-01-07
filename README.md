@@ -4,7 +4,7 @@ CourseFlow is a browser-based interactive curriculum planning and advising appli
 
 The system is designed to support both student-facing exploration and advisor-facing validation, while operating entirely client-side for privacy and ease of deployment.
 
- **Live Demo Site:** https://courseflow-one.vercel.app/
+**Live Demo Site:** https://courseflow-one.vercel.app/
 
 ---
 
