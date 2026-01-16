@@ -127,8 +127,8 @@ function App({ initialId, cwid }) {
         >
           <option value="EGCP">Comp. Eng. (EGCP)</option>
           <option value="CPEI">Comp. Eng. BS-MS (CPEI)</option>
-          {/*
           <option value="EGEE">EE (EGEE)</option>
+          {/*
           <option value="EGME">ME (EGME)</option>
           */}
         </select>
