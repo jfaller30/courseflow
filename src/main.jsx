@@ -4,7 +4,9 @@ import ProgramMap from "./ProgramMap.jsx";
 import * as XLSX from "xlsx";
 import "./index.css";
 
-const initialId = "EGCP";
+const params = new URLSearchParams(window.location.search);
+const initialId = params.get("id") || "EGCP";
+
 const COURSES_TEMPLATE_BASE = BLOB_URL + "/courses";
 
 // --- Detect mobile device
@@ -122,7 +124,13 @@ function App({ initialId, cwid }) {
         <label className="font-semibold">Program: </label>
         <select
           value={programId}
-          onChange={(e) => setProgramId(e.target.value)}
+          onChange={(e) => {
+            const id = e.target.value;
+            setProgramId(id);
+            const params = new URLSearchParams(window.location.search);
+            params.set("id", id);
+            window.history.replaceState({}, "", `?${params.toString()}`);
+          }}
           className="border rounded p-1"
         >
           <option value="EGCP">Comp. Eng. (EGCP)</option>
