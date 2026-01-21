@@ -374,19 +374,48 @@ export default function ProgramMap({ programId = "EGCP", termsProp, coursesProp 
       const wb = makeWorkbook();
       const blob = workbookToBlob(wb);
 
-      if (fileHandle) {
-        await writeToHandle(fileHandle, blob);
-        return;
+      // If we don't already have a handle, prompt once (Save As…) and store it.
+      let handle = fileHandle;
+      if (!handle) {
+        if (!("showSaveFilePicker" in window)) {
+          // Fallback to download if API not supported
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `flowstate_${programId}.xlsx`;
+          a.click();
+          URL.revokeObjectURL(url);
+          alert("Downloaded flowstate file ✅");
+          return;
+        }
+
+        handle = await window.showSaveFilePicker({
+          suggestedName: `flowstate_${programId}.xlsx`,
+          types: [
+            {
+              description: "Excel Workbook",
+              accept: {
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
+              },
+            },
+          ],
+        });
+
+        setFileHandle(handle); // ✅ key change
       }
 
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `flowstate_${programId}.xlsx`;
-      a.click();
-      URL.revokeObjectURL(url);
+      // Optional: ensure we have write permission (some browsers require this)
+      if (handle.requestPermission) {
+        const perm = await handle.requestPermission({ mode: "readwrite" });
+        if (perm !== "granted") return;
+      }
+
+      await writeToHandle(handle, blob);
+      alert("Saved ✅");
     } catch (e) {
+      // If user cancels the picker, you'll land here too; that's fine.
       console.error("Save failed:", e);
+      alert("Save failed. See console for details.");
     }
   };
 
