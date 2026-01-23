@@ -3,6 +3,7 @@ import {
   BorderStyle,
   Document,
   ExternalHyperlink,
+  Footer,
   Packer,
   Paragraph,
   Table,
@@ -194,8 +195,64 @@ async function makeNotesBulletsFromTemplate(programId) {
 
 function makeNotesBulletsFixed() {
   return [
-    // • ADD NOTES HERE
-    bullet([new TextRun({ text: "ADD NOTES HERE" })], 0)
+    // • New Prereqs/Coreqs (header)
+    bullet([new TextRun({ text: "New Prereqs/Coreqs (not in catalog yet):", bold: true, color: RED })], 0),
+
+    //   ○ EGEC-381...
+    bullet([new TextRun({ text: "EGEC-381: EGEC-280 and -281", color: RED })], 1),
+    bullet([new TextRun({ text: "EGEC-446: EGEC-281", color: RED })], 1),
+    bullet([new TextRun({ text: "EGEC-450: EGEC-303L and -280, EGEC-451 Coreq", color: RED })], 1),
+    bullet([new TextRun({ text: "Will need permits for these – ", color: RED }), link("mailto:jfaller@fullerton.edu", "jfaller@fullerton.edu")], 1),
+
+    // • Fall Only / Spring Only line (bold, red)
+    bullet(
+      [
+        new TextRun({
+          text: "Fall Only: EGEC-450, -470, -446, -447;  Spring Only: EGEC-471, -463, -451",
+          bold: true,
+          color: RED,
+        }),
+      ],
+      0
+    ),
+
+    // • Internships/Research – ECS Career Center
+    bullet([new TextRun({ text: "Internships/Research – Career Center – " }), link("https://www.fullerton.edu/career/")], 0),
+
+    // • ECE LinkedIn Group
+    bullet([new TextRun({ text: "ECE LinkedIn Group – " }), link("https://www.linkedin.com/groups/4699072/")], 0),
+
+    // • Repeat Policy
+    bullet(
+      [
+        new TextRun({ text: "Repeat Policy – " }),
+        link("https://registrar.fullerton.edu/acad-records/university-policies/?itemID=4c9d-ba62-d31e68-1"),
+      ],
+      0
+    ),
+
+    // • ECS Student Clubs/Groups
+    bullet([new TextRun({ text: "ECS Student Clubs/Groups – " }), link("https://www.fullerton.edu/ecs/resources/ecs_student_clubs.php")], 0),
+
+    // • Tech Electives – TDA or catalog
+    bullet(
+      [new TextRun({ text: "Tech Electives – Can be seen on the TDA or " }), link("https://catalog.fullerton.edu/"), new TextRun({ text: " catalog" })],
+      0
+    ),
+
+    // • Apply for graduation…
+    bullet([new TextRun({ text: "Apply for graduation at least 1 semester before – " }), link("https://registrar.fullerton.edu/graduation/apply-grad/")], 0),
+    bullet([new TextRun({ text: "Beginning of last semester – grad check" })], 1),
+
+    // • Advising holds…
+    bullet(
+      [
+        new TextRun({ text: "Advising holds haven’t been placed yet, email me to remove the hold when it does (" }),
+        link("mailto:jfaller@fullerton.edu", "jfaller@fullerton.edu"),
+        new TextRun({ text: ")" }),
+      ],
+      0
+    ),
   ];
 }
 
@@ -292,6 +349,25 @@ function makeScheduleTable(leftTitle, leftRows, rightTitle, rightRows) {
 }
 
 /* ============================================================================
+   Footer builder
+============================================================================ */
+
+function makeFooterBullets(which) {
+  const isSpring = String(which).toLowerCase().startsWith("s");
+
+  return [
+    paraRuns([
+      new TextRun({
+        text: isSpring
+          ? "Good Standing: Last digit of CWID is ODD – Mandatory advising next Fall"
+          : "Good Standing: Last digit of CWID is EVEN – Mandatory advising next Spring",
+      }),
+    ]),
+    paraRuns([new TextRun({ text: "Academic Notice: See " }), link("https://www.fullerton.edu/ecs/resources/notice.php")]),
+  ];
+}
+
+/* ============================================================================
    Public API
 ============================================================================ */
 
@@ -305,10 +381,20 @@ function makeScheduleTable(leftTitle, leftRows, rightTitle, rightRows) {
  * @param {Array<Object>} args.coursesProp
  * @returns {Promise<Blob|undefined>}
  */
-export async function generateAdvisingDoc({ programId, labels, coursesProp, returnType = "blob" }) {
-  // Choose left vs right schedule columns (Fall vs Spring)
-  const which = window.confirm("Generate notes for Fall? (Cancel for Spring)") ? "Fall" : "Spring";
-  const isSpring = which.toLowerCase().startsWith("s");
+export async function generateAdvisingDoc({
+  programId,
+  labels,
+  coursesProp,
+  which,               // new optional param: "Fall" | "Spring"
+  returnType = "blob",
+}) {
+  // If caller didn't provide explicit choice, fall back to the old confirm (keeps backwards compatibility)
+  const _which = which ?? (typeof window !== "undefined" && window.confirm
+    ? window.confirm("Generate notes for Fall? (Cancel for Spring)") ? "Fall" : "Spring"
+    : "Fall");
+
+  const isSpring = String(_which).toLowerCase().startsWith("s");
+  // use isSpring / _which in the rest of the code as before
 
   // Gather planned courses from labels
   const bySem = { Fall: [], Spr: [], Sum: [], Win: [] };
@@ -339,13 +425,13 @@ export async function generateAdvisingDoc({ programId, labels, coursesProp, retu
 
   const programTitle =
     PROGRAM_TITLES[programId] ?? `${programId} Program`;
-
+    
   const doc = new Document({
     sections: [
       {
         children: [
           // Header
-          paraRuns([new TextRun({ text: "University", bold: true, size: 32 })], {
+          paraRuns([new TextRun({ text: "Cal State Fullerton", bold: true, size: 32 })], {
             alignment: AlignmentType.CENTER,
           }),
           paraRuns([new TextRun({ text: `${programTitle} Advising Notes` })], {
@@ -356,7 +442,7 @@ export async function generateAdvisingDoc({ programId, labels, coursesProp, retu
           // Student info
           paraRuns([new TextRun({ text: "Name:", bold: true }), new TextRun({ text: " " })]),
           paraRuns([new TextRun({ text: "Date: ", bold: true }), new TextRun({ text: new Date().toLocaleDateString() })]),
-          paraRuns([new TextRun({ text: "Student ID:", bold: true }), new TextRun({ text: " " })]),
+          paraRuns([new TextRun({ text: "CWID:", bold: true }), new TextRun({ text: " " })]),
 
           // Schedule
           paraRuns([new TextRun({ text: "Tentative Schedule:", bold: true, underline: {} })], { spacing: { before: 200 } }),
@@ -371,7 +457,12 @@ export async function generateAdvisingDoc({ programId, labels, coursesProp, retu
           // Notes
           paraRuns([new TextRun({ text: "Notes:", bold: true, underline: {} })], { spacing: { before: 200 } }),
           ...(await makeNotesBullets(programId)),
-        ]
+        ],
+        footers: {
+          default: new Footer({
+            children: makeFooterBullets(which),
+          }),
+        },
       },
     ],
   });

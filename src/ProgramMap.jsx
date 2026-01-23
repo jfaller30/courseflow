@@ -13,6 +13,14 @@ import {
   trackRouter
 } from "./graph/trackRouter";
 import { checkPlan } from "./graph/checkPlan";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "./ui/dialog";
 
 // NOTE: PDF import removed in favor of HTML-based imports for reliability.
 
@@ -247,6 +255,34 @@ export default function ProgramMap({ programId = "EGCP", termsProp, coursesProp 
   // Excel file handle (optional)
   const [fileHandle, setFileHandle] = useState(null);
 
+  // Used for Dialogs
+  const [dialog, setDialog] = useState({
+    open: false,
+    title: "",
+    description: "",
+  });
+
+  // helper to show dialog
+  const showDialog = (title, description = "") => {
+    setDialog({ open: true, title: String(title), description: String(description) });
+  };
+
+  // Confirm state (inside ProgramMap component)
+  const [confirm, setConfirm] = useState({
+    open: false,
+    title: "",
+    message: "",
+    onFall: null,
+    onSpring: null,
+  });
+
+  // helper to open confirm
+  const confirmFallSpring = ({ title, message, onFall, onSpring }) => {
+    setConfirm({ open: true, title, message, onFall, onSpring });
+  };
+
+  // close helper (useful for buttons)
+  const closeDialog = () => setDialog((d) => ({ ...d, open: false }));
 
   /* ----------------------------
     Category color configuration (Vercel Blob)
@@ -385,7 +421,7 @@ export default function ProgramMap({ programId = "EGCP", termsProp, coursesProp 
           a.download = `flowstate_${programId}.xlsx`;
           a.click();
           URL.revokeObjectURL(url);
-          alert("Downloaded flowstate file ✅");
+          showDialog("Saved", "Saved successfully.");
           return;
         }
 
@@ -401,7 +437,7 @@ export default function ProgramMap({ programId = "EGCP", termsProp, coursesProp 
           ],
         });
 
-        setFileHandle(handle); // ✅ key change
+        setFileHandle(handle); // key change
       }
 
       // Optional: ensure we have write permission (some browsers require this)
@@ -411,18 +447,17 @@ export default function ProgramMap({ programId = "EGCP", termsProp, coursesProp 
       }
 
       await writeToHandle(handle, blob);
-      alert("Saved ✅");
+      showDialog("Saved", "Saved successfully.");
     } catch (e) {
       // If user cancels the picker, you'll land here too; that's fine.
       console.error("Save failed:", e);
-      alert("Save failed. See console for details.");
     }
   };
 
   const loadExcelFromPicker = async () => {
     try {
       if (!("showOpenFilePicker" in window)) {
-        alert("Your browser doesn’t support direct file open. Use Chrome/Edge for best results.");
+        alert("Your browser doesn't support direct file open. Use Chrome/Edge for best results.");
         return;
       }
 
@@ -507,33 +542,58 @@ export default function ProgramMap({ programId = "EGCP", termsProp, coursesProp 
 
   const checkAllLabeledReqs = () => {
     const problems = checkPlan({ labels, map });
-    if (!problems.length) alert("All checks passed ✅");
-    else alert(problems.join("\n"));
+    if (!problems.length)
+      showDialog("All Checks Passed", "No prerequisite or offering issues found.");
+    else 
+      showDialog("Issues found", problems.join("\n"));
   };
-
 
   /* ============================================================================
      DOCX: GENERATE ADVISING NOTES
   ============================================================================ */
 
-  const genNotes = async () => {
-    try {
-      const blob = await generateAdvisingDoc({ programId, labels, notes, coursesProp });
-
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      const today = new Date();
-      const dateStr = `${today.getMonth() + 1}-${today.getDate()}-${today.getFullYear().toString().slice(-2)}`;
-      a.href = url;
-      a.download = `Advising ${dateStr}.docx`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 0);
-    } catch (err) {
-      console.error("Gen Notes failed:", err);
-      alert("Gen Notes failed. See console for details.");
-    }
+  const handleGenNotes = () => {
+    confirmFallSpring({
+      title: "Generate Advising Notes",
+      message: "Current Semester: Fall or Spring?",
+      onFall: async () => {
+        try {
+          const blob = await generateAdvisingDoc({ programId, labels, coursesProp, which: "SSpring" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          const today = new Date();
+          const dateStr = `${today.getMonth() + 1}-${today.getDate()}-${String(today.getFullYear()).slice(-2)}`;
+          a.download = `Advising ${dateStr}.docx`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 0);
+        } catch (err) {
+          console.error("Gen Notes failed:", err);
+          showDialog("Gen Notes failed", "See console for details.");
+        }
+      },
+      onSpring: async () => {
+        try {
+          const blob = await generateAdvisingDoc({ programId, labels, coursesProp, which: "Fall" });
+          // same download code as above
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          const today = new Date();
+          const dateStr = `${today.getMonth() + 1}-${today.getDate()}-${String(today.getFullYear()).slice(-2)}`;
+          a.download = `Advising ${dateStr}.docx`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 0);
+        } catch (err) {
+          console.error("Gen Notes failed:", err);
+          showDialog("Gen Notes failed", "See console for details.");
+        }
+      },
+    });
   };
 
   /* ============================================================================
@@ -570,10 +630,8 @@ export default function ProgramMap({ programId = "EGCP", termsProp, coursesProp 
         const html = await pick.text();
         ev = parseTdaEvidenceFromHtml(html);
       } else {
-        alert(
-          "Please import an HTML TDA export (.html/.htm)\n\n" +
-          "Tip: In the TDA portal, open the audit in the HTML view, then use your browser's Save Page As…"
-        );
+        showDialog("Import Issue", "Please import an HTML TDA export (.html/.htm)\n\n" +
+          "Tip: In the TDA portal, open the audit in the HTML view, then use your browser's Save Page As…");
         return;
       }
 
@@ -785,14 +843,17 @@ export default function ProgramMap({ programId = "EGCP", termsProp, coursesProp 
       // Count everything we actually struck so the alert matches
       const totalStruck = Object.values(nextLabels).filter((v) => v === "__strike__").length;
 
-      alert(
-        `Imported TDA - Struck: ${totalStruck}\n\n` +
-        `NOTE: Import doesn't always work reliably\n` +
-        `Please double-check that the import is correct`
+      showDialog(
+        "TDA Imported",
+        `Struck: ${totalStruck}
+
+        NOTE: Import doesn't always work reliably.
+        Please double-check that the import is correct.`
       );
+
     } catch (err) {
       console.error("Import failed:", err);
-      alert("Import failed. Check console for details.");
+      showDialog("Import Failed", "Import failed. Check console for details.");
     } finally {
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
@@ -897,10 +958,9 @@ export default function ProgramMap({ programId = "EGCP", termsProp, coursesProp 
         <div className="flex items-center gap-2">
           <button className="px-2 py-1 border rounded" onClick={() => window.location.reload()}>New</button>
           <button className="px-2 py-1 border rounded" onClick={checkAllLabeledReqs}>Check</button>
-          <button className="px-2 py-1 border rounded" onClick={genNotes}>Gen Notes</button>
+          <button className="px-2 py-1 border rounded" onClick={handleGenNotes}>Gen Notes</button>
           <button className="px-2 py-1 border rounded" onClick={loadExcelFromPicker}>Load</button>
           <button className="px-2 py-1 border rounded" onClick={saveExcel}>Save</button>
-
           <button className="px-2 py-1 border rounded" onClick={importFromTDA}>Import</button>
           <input
             ref={fileInputRef}
@@ -1120,6 +1180,53 @@ export default function ProgramMap({ programId = "EGCP", termsProp, coursesProp 
           </div>
         )}
       </div>
+      {/* Global Dialog */}
+      <Dialog open={dialog.open} onOpenChange={(open) => setDialog((d) => ({ ...d, open }))}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{dialog.title}</DialogTitle>
+            <DialogDescription className="whitespace-pre-line">
+              {dialog.description}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <button className="px-3 py-1 border rounded" onClick={closeDialog}>OK</button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirm Dialog */}
+      <Dialog open={confirm.open} onOpenChange={(open) => setConfirm((c) => ({ ...c, open }))}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{confirm.title}</DialogTitle>
+            <DialogDescription className="whitespace-pre-line">{confirm.message}</DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter>
+            <button
+              className="px-3 py-1 border rounded"
+              onClick={() => {
+                confirm.onSpring?.();
+                setConfirm((c) => ({ ...c, open: false }));
+              }}
+            >
+              Spring
+            </button>
+
+            <button
+              className="px-3 py-1 border rounded bg-slate-900 text-white"
+              onClick={() => {
+                confirm.onFall?.();
+                setConfirm((c) => ({ ...c, open: false }));
+              }}
+            >
+              Fall
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }
