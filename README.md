@@ -12,7 +12,7 @@ The system is designed to support both student-facing exploration and advisor-fa
 
 If you use or reference CourseFlow in academic work, please cite the accompanying publication:
 
-K. Faller, “Designing educational systems with generative AI: The CourseFlow case study,” in Proc. AIxHEART, 2026, accepted for publication.
+K. Faller, “Designing Educational Systems With Generative AI: The Courseflow Case Study,” in Proc. AIxHEART, 2026. [Accepted]
 
 ---
 
